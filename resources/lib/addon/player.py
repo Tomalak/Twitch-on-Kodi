@@ -63,8 +63,11 @@ class TwitchPlayer(xbmc.Player):
             self.window.clearProperty(key=self.player_keys[k])
 
     def onPlayBackStarted(self):
+        twitch_host_matches = ['jtvnw.', 'ttvnw.', 'twitch.tv']
         is_playing = self.window.getProperty(key=self.player_keys['twitch_playing']) == 'True'
         seek_time = self.window.getProperty(key=self.seek_keys['seek_time'])
+        if is_playing:
+            is_playing = any(host_match in self.getPlayingFile() for host_match in twitch_host_matches)
         log_utils.log('Player: |onPlayBackStarted| isTwitch |{0}| SeekTime |{1}|'.format(is_playing, seek_time), log_utils.LOGDEBUG)
         if not is_playing:
             self.reset()
@@ -108,8 +111,8 @@ class TwitchPlayer(xbmc.Player):
                                     if monitor.waitForAbort(0.5) or dialog.is_canceled():
                                         abort = True
                                         break
-                                    wait_time += 0.5
-                                    if wait_time.is_integer():
+                                    wait_time += 1.0
+                                    if (wait_time % 2) == 0:
                                         percent = int(((wait_time / 120) * 100))
                                         dialog.update(percent=percent, line3=utils.i18n('retry_seconds') % ((120.0 - wait_time) / 2))
                                 if abort:
